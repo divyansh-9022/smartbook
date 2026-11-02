@@ -1,0 +1,68 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${SMARTBOOK_DB_NAME:-smartbook_db}
+      MYSQL_USER: ${SMARTBOOK_DB_USERNAME:-smartbook_app}
+      MYSQL_PASSWORD: ${SMARTBOOK_DB_PASSWORD:?Set database password in .env}
+      MYSQL_ROOT_PASSWORD: ${SMARTBOOK_DB_ROOT_PASSWORD:?Set root password in .env}
+    volumes:
+      - smartbook_mysql_data:/var/lib/mysql
+    networks:
+      - smartbook_net
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: ./backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${SMARTBOOK_DB_NAME:-smartbook_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${SMARTBOOK_DB_USERNAME:-smartbook_app}
+      SPRING_DATASOURCE_PASSWORD: ${SMARTBOOK_DB_PASSWORD}
+      SMARTBOOK_JWT_SECRET: ${SMARTBOOK_JWT_SECRET}
+      SPRING_MAIL_HOST: ${SMARTBOOK_MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${SMARTBOOK_MAIL_PORT:-587}
+      SMARTBOOK_MAIL_USERNAME: ${SMARTBOOK_MAIL_USERNAME:?Set SMTP username in .env}
+      SMARTBOOK_MAIL_PASSWORD: ${SMARTBOOK_MAIL_PASSWORD:?Set SMTP password in .env}
+      APP_MAIL_FROM: ${SMARTBOOK_MAIL_FROM:-${SMARTBOOK_MAIL_USERNAME}}
+      APP_GUMROAD_PRODUCT_ID: ${GUMROAD_PRODUCT_ID}
+      APP_LICENSE_ENFORCEMENT_ENABLED: "true"
+      APP_FRONTEND_URL: ${FRONTEND_URL}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - smartbook_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ""
+    ports:
+      - "8082:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - smartbook_net
+
+volumes:
+  smartbook_mysql_data:
+
+networks:
+  smartbook_net:

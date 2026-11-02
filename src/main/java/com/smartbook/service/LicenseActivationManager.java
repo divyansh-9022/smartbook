@@ -51,7 +51,7 @@ public class LicenseActivationManager {
             );
         }
 
-        boolean valid = gumroadLicenseService.verifyLicenseKey(licenseKey);
+        boolean valid = gumroadLicenseService.activateLicenseKey(licenseKey);
 
         if (!valid) {
             throw new IllegalArgumentException(
