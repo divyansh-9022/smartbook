@@ -1,0 +1,9 @@
+.git
+.idea
+target/
+frontend/
+uploads/
+.env
+.env.*
+*.log
+HELP.md

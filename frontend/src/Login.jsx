@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 
 function Login({ onLogin, onShowRegister }) {
   const [email, setEmail] = useState('')

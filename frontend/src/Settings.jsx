@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import LicenseActivation from './LicenseActivation'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 
 function Settings({ token }) {
   const [profile, setProfile] = useState(null)
